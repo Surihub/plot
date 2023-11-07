@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from statsmodels.graphics.mosaicplot import mosaic  
 import numpy as np
-import koreanize_matplotlib
+# import koreanize_matplotlib
 
 # Streamlit 앱 제목 설정
 st.title("📊 데이터 시각화 및 분석")
