@@ -4,11 +4,13 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from statsmodels.graphics.mosaicplot import mosaic  
 import numpy as np
+import datetime
 # import koreanize_matplotlib
 
 # Streamlit 앱 제목 설정
 st.title("📊 데이터 시각화 및 분석")
-
+st.write('''
+탐색적 데이터 분석을 위한 데이터 시각화 및 분석 페이지입니다. 순차적으로 진행해보세요!''')
 # 데이터셋 불러오기 또는 파일 업로드 선택 창
 st.subheader("1️⃣ 데이터 불러오기")
 
@@ -22,6 +24,8 @@ with tab1:
                 df = sns.load_dataset(dataset_name)
                 st.session_state['df'] = df
                 st.write(df.head())
+                current_time = datetime.datetime.now()
+                st.write("현재 시간:", current_time)
             except ValueError:
                 st.error("⚠ 데이터셋 이름을 다시 확인해주세요!")
 
@@ -37,6 +41,7 @@ with tab2:
             st.write(df.head())
         else:
             st.error("⚠ 파일을 업로드해주세요!")
+
 
 # 데이터가 불러와졌는지 확인
 if 'df' in st.session_state:
@@ -90,7 +95,6 @@ if 'df' in st.session_state:
 
         dict1 = {key: column_types[key] for key in keys[:half]}
         dict2 = {key: column_types[key] for key in keys[half:]}
-
 
         with col1:
             for column, col_type in dict1.items():
