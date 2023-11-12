@@ -2,4 +2,3 @@ streamlit
 seaborn
 statsmodels
 koreanize-matplotlib
-openpyxl

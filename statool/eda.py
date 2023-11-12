@@ -4,7 +4,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from statsmodels.graphics.mosaicplot import mosaic
 import datetime
-import openpyxl
 import streamlit as st
 import numpy as np
 
@@ -20,8 +19,8 @@ def load_data(dataset_name, uploaded_file):
     elif uploaded_file:
         if uploaded_file.name.endswith('.csv'):
             df = pd.read_csv(uploaded_file)
-        elif uploaded_file.name.endswith('.xlsx'):
-            df = pd.read_excel(uploaded_file)
+        else:
+            st.warning("csv 파일만 업로드 가능합니다. ")
         return df
 
 @st.cache_data
@@ -40,10 +39,6 @@ def convert_column_types(df, user_column_types):
         elif col_type == 'Categorical':
             df[column] = df[column].astype('category')
     return df
-
-
-
-
 
 @st.cache_data
 def infer_column_types(df):
@@ -114,33 +109,30 @@ def transform_numeric_data(df, column, transformation):
     # 원본 데이터 열 삭제
     df = df.drop(column, axis = 1)
 
-    return df, transformed_column
+    return df
 
 pal = sns.color_palette(['#FB8500', '#FFB703', '#8E8444', '#1B536F', '#219EBC', '#A7D0E2'])
+
 def palet(num_categories):
     if num_categories <= 6:
-        pal = sns.color_palette(['#FB8500', '#FFB703', '#8E8444', '#1B536F', '#219EBC', '#A7D0E2'])
+        p = sns.color_palette(['#FB8500', '#FFB703', '#8E8444', '#1B536F', '#219EBC', '#A7D0E2'])
         
     else:
-        pal = sns.color_palette("Set2", n_colors=num_categories)
-    return pal
+        p = sns.color_palette("Set2", n_colors=num_categories)
+    return p
 
 @st.cache_data
 def pairviz(df):
-    progress_text = st.empty()  # 진행 상황을 표시할 빈 위젯 생성    
+    import time
     user_column_types = infer_column_types(df)
     n = len(df.columns)
-    total_plots = n * n
-    completed_plots = 0
-    # pal = sns.color_palette("Set2")
     # 범주의 수에 따라 팔레트 선택
-    pal = sns.color_palette(['#FB8500', '#FFB703', '#8E8444', '#1B536F', '#219EBC', '#A7D0E2'])
-
     # 전체 그래프 개수 계산
-    total_plots = len(df.columns) ** 2
-    completed_plots = 0
+    progress_text = "📈 그래프를 그리는 중입니다...."
+    count = 0
+    placeholder = st.empty()
+    placeholder.progress(count , text=progress_text)
     fig, axes = plt.subplots(n, n, figsize=(4 * n, 4 * n))
-
     for i, col1 in enumerate(df.columns):
         for j, col2 in enumerate(df.columns):
             ax = axes[i, j]
@@ -154,7 +146,7 @@ def pairviz(df):
                     sns.kdeplot(data=df, x=col1, hue=col2, ax=ax, palette=pal)  # 여기를 수정
                 elif user_column_types[col1] == 'Categorical' and user_column_types[col2] == 'Categorical':
                     unique_values = df[col2].unique().astype(str)
-                    st.write(unique_values)
+                    # st.write(unique_values)
                     # 색상 매핑 생성
                     color_mapping = {val: color for val, color in zip(unique_values, palet(len(unique_values)))}
                     mosaic(df, [col1, col2], ax=ax, properties=lambda key: {'color': color_mapping[key[1]]}, gap=0.05)
@@ -166,9 +158,13 @@ def pairviz(df):
                 else:
                     sns.countplot(x=df[col1], ax=ax, palette=pal)
                 ax.set_title(f'Distribution of {col1}')
-            completed_plots += 1
-            progress_text.text(f'그려진 그래프: {completed_plots} / 총 그래프: {total_plots}')  # 진행 상황 업데이트
+            count = count + 1
+            placeholder.progress(count /(n*n), text=progress_text)
+            # st.text(f'그려진 그래프: {completed_plots} / 총 그래프: {total_plots}')  # 진행 상황 업데이트
+            time.sleep(0.1)
+            # placeholder.empty()
+
 
     plt.tight_layout()
+    placeholder.empty()
     st.pyplot(fig)
-    progress_text.empty()  # 모든 그래프가 그려진 후 텍스트 제거

@@ -6,16 +6,11 @@ import datetime
 import numpy as np
 import openpyxl
 
-# # 데이터 로드 함수
-# def load_data(dataset_name, uploaded_file):
-    
-#     if dataset_name:
-#         return sns.load_dataset(dataset_name)
-#     elif uploaded_file:
-#         if uploaded_file.name.endswith('.csv'):
-#             return pd.read_csv(uploaded_file)
-#         elif uploaded_file.name.endswith('.xlsx'):
-#             return pd.read_excel(uploaded_file)
+# 버튼을 통해 캐시 클리어
+if st.button('새로운 데이터를 탐색하려면 버튼을 눌러주세요. '):
+    st.cache_data.clear()  # 모든 memo 캐시 클리어
+    st.cache_resource.clear()  # 모든 singleton 캐시 클리어
+    st.write("모든 데이터가 삭제되었습니다.")
 
 # 스트림릿 세션 상태 초기화
 if 'df' not in st.session_state:
@@ -32,6 +27,8 @@ if 'types_set' not in st.session_state:
     st.session_state['types_set'] = False
 if 'transformations' not in st.session_state:
     st.session_state['transformations'] = {}
+if 'viz' not in st.session_state:
+    st.session_state['viz'] = {} 
 
 
 # 1. 데이터 불러오기 및 확인
@@ -40,7 +37,7 @@ with st.expander("샘플 데이터 목록을 보려면 펼치세요."):
     st.text(sns.get_dataset_names())
 
 dataset_name = st.text_input('데이터셋 이름 (예: titanic, tips, taxis, penguins, iris):')
-uploaded_file = st.file_uploader("파일 업로드", type=["csv", "xlsx"])
+uploaded_file = st.file_uploader("파일 업로드", type=["csv"])
 
 if st.button('데이터 불러오기'):
     df = eda.load_data(dataset_name, uploaded_file)
@@ -119,30 +116,42 @@ if st.session_state['columns_selected']:
             st.success("데이터 유형 변경 완료!")
 
 # 4. 데이터 시각화
-st.text(eda.palet(5))
 if st.session_state['types_set']:
-    st.header("4. 데이터 시각화")
-    if st.button("시각화하기"):
-        converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
+    st.header("4. 데이터 요약과 시각화")
+    converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
+    st.session_state['converted_df'] = converted_df
+    st.write(converted_df.head(2))
+    tab1, tab2  = st.tabs(['기술통계량 확인하기', '데이터 시각화'])
+    with tab1:
+        # 각 열에 대한 기술통계량 또는 빈도표 생성
+        for column, col_type in user_column_types.items():
+            st.write(f"**{column}** ({col_type})")
+            if col_type == 'Numeric':
+                st.write(pd.DataFrame(converted_df[column].describe()).T)
+            elif col_type == 'Categorical':
+                st.write(pd.DataFrame(converted_df[column].value_counts()).T.style.background_gradient(axis=1))
+    with tab2:
+        
         eda.pairviz(converted_df)
+        st.session_state['viz'] = True
+
 
 # 5. 재표현하기
-if st.session_state['types_set']:
+if st.session_state['viz']:
     st.header("5. 재표현하기")
-    df_transformed = st.session_state['df'][st.session_state['selected_columns']].copy()
-    eda.infer_column_types(df_transformed)
-    st.write()
-    st.write()
-    # st.write(df_transformed.select_dtypes(include=[np.number]))
-    # df_transformed = st.session_state['df'][st.session_state['selected_columns']].copy()
-    # for col in st.session_state['selected_columns']:
-    #     if st.session_state['user_column_types'][col] == 'Numeric':
-    #         transformation = st.radio(f"{col} 변환 선택:", ['그대로', '로그변환', '제곱근', '제곱'], key=f"trans_{col}")
-    #         st.session_state['transformations'][col] = transformation
-    #         if transformation != '그대로':
-    #             df_transformed = eda.transform_numeric_data(df_transformed, col, transformation)
-    # if st.button('재표현 후 시각화하기'):
-    #     eda.pairviz(df_transformed)
+    converted_df = st.session_state['converted_df']
+    st.write(eda.infer_column_types(converted_df))
+
+    df_transformed = converted_df.copy()
+    for col in st.session_state['selected_columns']:
+        if st.session_state['user_column_types'][col] == 'Numeric':
+            transformation = st.radio(f"{col} 변환 선택:", ['그대로', '로그변환', '제곱근', '제곱'], key=f"trans_{col}")
+            st.session_state['transformations'][col] = transformation
+            if transformation != '그대로':
+                df_transformed = eda.transform_numeric_data(df_transformed, col, transformation)
+    st.write(df_transformed.head())
+    if st.button('재표현 후 시각화하기'):
+        eda.pairviz(df_transformed)
 # # app.py
 # import streamlit as st
 # import pandas as pd
