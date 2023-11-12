@@ -4,7 +4,6 @@ import seaborn as sns
 import statool.eda as eda  # eda 모듈 임포트
 import datetime
 import numpy as np
-import openpyxl
 
 # 버튼을 통해 캐시 클리어
 if st.button('새로운 데이터를 탐색하려면 버튼을 눌러주세요. '):
