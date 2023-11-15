@@ -121,20 +121,23 @@ def palet(num_categories):
         p = sns.color_palette("Set2", n_colors=num_categories)
     return p
 
+import time
 @st.cache_data
-def pairviz(df):
-    import time
+def 모든_그래프_그리기(df):
     user_column_types = infer_column_types(df)
     n = len(df.columns)
     # 범주의 수에 따라 팔레트 선택
     # 전체 그래프 개수 계산
     progress_text = "📈 그래프를 그리는 중입니다...."
     count = 0
-    placeholder = st.empty()
-    placeholder.progress(count , text=progress_text)
+    # placeholder = st.empty()
+    # st.empty()
+    # bar = st.progress(count , text=progress_text)
     fig, axes = plt.subplots(n, n, figsize=(4 * n, 4 * n))
     for i, col1 in enumerate(df.columns):
+        # toast = st.toast(f"{col1}의 그래프를 그리는 중!", icon = '🍞')
         for j, col2 in enumerate(df.columns):
+            # toast.toast(f"{col1}과 {col2}의 그래프", icon = '🥞')
             ax = axes[i, j]
             if i != j:
                 if user_column_types[col1] == 'Numeric' and user_column_types[col2] == 'Numeric':
@@ -159,12 +162,12 @@ def pairviz(df):
                     sns.countplot(x=df[col1], ax=ax, palette=pal)
                 ax.set_title(f'Distribution of {col1}')
             count = count + 1
-            placeholder.progress(count /(n*n), text=progress_text)
+            # bar.progress(count /(n*n), text=progress_text)
             # st.text(f'그려진 그래프: {completed_plots} / 총 그래프: {total_plots}')  # 진행 상황 업데이트
             time.sleep(0.1)
             # placeholder.empty()
-
+    # st.toast("거의 다 그렸어요!", icon = "🍽")
 
     plt.tight_layout()
-    placeholder.empty()
+    # bar.empty()
     st.pyplot(fig)

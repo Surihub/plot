@@ -2,3 +2,4 @@ streamlit
 seaborn
 statsmodels
 koreanize-matplotlib
+openai
