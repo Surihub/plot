@@ -2,7 +2,7 @@ import streamlit as st
 import seaborn as sns
 import pandas as pd
 import matplotlib.pyplot as plt
-import openai
+from openai import OpenAI
 
 # Streamlit 앱 제목 설정
 st.title('원하는 그래프를 만들어드려요!')
