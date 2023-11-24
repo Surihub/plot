@@ -29,15 +29,16 @@ if 'viz' not in st.session_state:
 dataset_name = st.sidebar.selectbox("분석하고 싶은 데이터를 선택해주세요!",
     sns.get_dataset_names(), index = 16, help = "처음이시라면, 귀여운 펭귄들의 데이터인 'penguins'를 추천드려요😀")
 with st.sidebar:
-    uploaded_file = st.file_uploader("혹은, 파일을 업로드해주세요!", type=["csv"], help = 'csv파일 업로드는 준비중입니다😥')
+    uploaded_file = st.file_uploader("혹은, 파일을 업로드해주세요!", type=["csv"], help = 'csv파일만 업로드됩니다😥')
 with st.sidebar:
     if uploaded_file is not None:
         mydata = "업로드한 데이터"
     else:
         mydata = dataset_name
     if st.checkbox(f'**{mydata}** 불러오기'):
+        # df = sns.load_dataset(dataset_name)
         df = eda.load_data(dataset_name, uploaded_file)
-        df = st.session_state['df']
+        # df = st.session_state['df']
     # # 버튼을 통해 캐시 클리어
     # if st.button('새로운 데이터를 탐색하려면 버튼을 눌러주세요. '):
     #     st.cache_data.clear()  # 모든 memo 캐시 클리어
@@ -47,7 +48,7 @@ with st.sidebar:
     #     st.session_state['df'] = None
        
 st.subheader("👀 데이터 확인하기")
-
+# st.write(df)
 try:
     if df is not None:
         st.session_state['df'] = df
@@ -58,7 +59,7 @@ try:
             st.write(df)
 except:
     st.error("사이드바에서 먼저 데이터를 선택 후 <데이터 불러오기> 버튼을 클릭해주세요. ")
-
+# st.write(st.session_state['data_loaded'])
 # 2. 열 선택
 if st.session_state['data_loaded']:
     df = st.session_state['df']
@@ -127,7 +128,7 @@ if st.session_state['columns_selected']:
         if st.button('유형 변경 완료!'):
             st.session_state['user_column_types'] = user_column_types
             st.session_state['types_set'] = True
-            st.success("데이터 유형 변경 완료!")
+            st.success("데이터 유형 변경완료!")
 
 # 4. 데이터 시각화
 if st.session_state['types_set']:
@@ -135,7 +136,7 @@ if st.session_state['types_set']:
     converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
     st.session_state['converted_df'] = converted_df
     # st.write(converted_df.head(2))
-    tab1, tab2  = st.tabs(['기술통계량 확인하기', '데이터 시각화'])
+    tab1, tab2  = st.tabs(['데이터 시각화','기술통계량 확인하기'])
     with tab1:
         st.warning("각 변수마다 일변량, 이변량 데이터를 시각화하고 있어요. 오래 걸릴 수 있으니 기다려주세요!")
         eda.모든_그래프_그리기(converted_df)
@@ -171,10 +172,11 @@ if st.session_state['viz']:
 import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-import koreanize_matplotlib
+# import koreanize_matplotlib
 
 if st.session_state['viz']:
     st.subheader("🔍 회귀선과 잔차 살펴보기")
+    st.success("산점도로 나타낸 데이터를 가장 잘 설명할 수 있는 회귀선(왼쪽)과 이에 대한 잔차플롯을 보고, 회귀식이 적합한지 살펴보세요. 잔차플롯에서 패턴이 랜덤이 아닌 것 처럼 보인다면, 혹은 잔차플롯의 두 빨간 선이 많이 어긋난다면 무언가 잘못된 거에요!")
     
     # 데이터프레임 복사
     df_residual = converted_df.copy()

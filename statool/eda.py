@@ -9,6 +9,9 @@ import numpy as np
 
 @st.cache_data
 # 데이터 로드 함수 정의
+# def load_data(dataset_name):
+#     df = sns.load_dataset(dataset_name)
+#     return df
 def load_data(dataset_name, uploaded_file):
     if uploaded_file:
         if uploaded_file.name.endswith('.csv'):
@@ -194,7 +197,7 @@ def 모든_그래프_그리기(df):
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-import koreanize_matplotlib
+# import koreanize_matplotlib
 @st.cache_data
 def plot_residuals(df, x, y):
 
@@ -211,9 +214,9 @@ def plot_residuals(df, x, y):
     df_copy['Residuals'] = df_copy[y] - df_copy['Predicted']
 
     fig, axs = plt.subplots(ncols=2, figsize=(8, 3))
-    sns.regplot(x=x, y=y, data=df_copy, ax = axs[0], line_kws = {'color' : 'red'})
-    sns.regplot(data = df_copy, x='Predicted', y='Residuals', lowess=True,  line_kws={'color': 'red'}, ax = axs[1])
-    axs[1].hlines(y=0, xmin=df_copy['Predicted'].min(), xmax=df_copy['Predicted'].max(), color='red')
+    sns.regplot(x=x, y=y, data=df_copy, ax = axs[0], color = '#557C55', line_kws = {'color' : '#FA7070'})
+    sns.regplot(data = df_copy, x='Predicted', y='Residuals', lowess=True,  color = "#A6CF98",line_kws={'color': '#FA7070'}, ax = axs[1])
+    axs[1].hlines(y=0, xmin=df_copy['Predicted'].min(), xmax=df_copy['Predicted'].max(), color='#FA7070', linestyles = 'dashed')
     axs[0].set_title(f'Regression')
     axs[1].set_title('Residual plot')    
     st.pyplot(fig)
