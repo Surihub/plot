@@ -10,18 +10,38 @@ import numpy as np
 @st.cache_data
 # 데이터 로드 함수 정의
 def load_data(dataset_name, uploaded_file):
-    if dataset_name:
+    if uploaded_file:
+        if uploaded_file.name.endswith('.csv'):
+            df = pd.read_csv(uploaded_file, encoding = 'euc-kr')
+        else:
+            st.warning("csv 파일만 업로드 가능합니다. ")
+        return df
+    elif dataset_name:
         try:
             df = sns.load_dataset(dataset_name)
             return df
         except ValueError:
             st.error("⚠ 데이터셋 이름을 다시 확인해주세요!")
-    elif uploaded_file:
-        if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file)
-        else:
-            st.warning("csv 파일만 업로드 가능합니다. ")
-        return df
+
+# @st.cache_data
+# def select_columns(df):
+    
+
+
+
+# def load_data(dataset_name, uploaded_file):
+#     if dataset_name:
+#         try:
+#             df = sns.load_dataset(dataset_name)
+#             return df
+#         except ValueError:
+#             st.error("⚠ 데이터셋 이름을 다시 확인해주세요!")
+#     elif uploaded_file:
+#         if uploaded_file.name.endswith('.csv'):
+#             df = pd.read_csv(uploaded_file)
+#         else:
+#             st.warning("csv 파일만 업로드 가능합니다. ")
+#         return df
 
 @st.cache_data
 def summarize(df):
@@ -170,4 +190,30 @@ def 모든_그래프_그리기(df):
 
     plt.tight_layout()
     # bar.empty()
+    st.pyplot(fig)
+
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, r2_score
+import koreanize_matplotlib
+@st.cache_data
+def plot_residuals(df, x, y):
+
+    # DataFrame의 복사본 생성
+    df_copy = df.copy()
+    df_copy = df_copy.dropna()
+
+    # 선형 회귀 모델 생성 및 학습
+    model = LinearRegression()
+    model.fit(df_copy[[x]], df_copy[y])
+
+    # 예측 및 잔차 계산
+    df_copy['Predicted'] = model.predict(df_copy[[x]])
+    df_copy['Residuals'] = df_copy[y] - df_copy['Predicted']
+
+    fig, axs = plt.subplots(ncols=2, figsize=(8, 3))
+    sns.regplot(x=x, y=y, data=df_copy, ax = axs[0], line_kws = {'color' : 'red'})
+    sns.regplot(data = df_copy, x='Predicted', y='Residuals', lowess=True,  line_kws={'color': 'red'}, ax = axs[1])
+    axs[1].hlines(y=0, xmin=df_copy['Predicted'].min(), xmax=df_copy['Predicted'].max(), color='red')
+    axs[0].set_title(f'Regression')
+    axs[1].set_title('Residual plot')    
     st.pyplot(fig)
