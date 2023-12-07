@@ -141,7 +141,6 @@ if st.session_state['types_set']:
     # st.write(converted_df.head(2))
     tab1, tab2  = st.tabs(['데이터 시각화','기술통계량 확인하기'])
     with tab1:
-        st.warning("각 변수마다 일변량, 이변량 데이터를 시각화하고 있어요. 오래 걸릴 수 있으니 기다려주세요!")
         eda.모든_그래프_그리기(converted_df)
         st.session_state['viz'] = True
     with tab2:
@@ -160,19 +159,21 @@ if st.session_state['types_set']:
 from stemgraphic import stem_graphic
 # 4. 데이터 시각화
 if st.session_state['types_set']:
-    st.subheader("📊 데이터 하나씩 시각화")
+    st.subheader("📈 데이터 하나씩 시각화")
     st.success("위에서 나타낸 패턴을 바탕으로, 한 열만을 골라 다양하게 시각화해보면서 추가적으로 탐색해봅시다. ")
     converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
-    selected_col = st.selectbox("자세하게 시각화할 열 하나를 선택해주세요. ", converted_df.columns)
+
+    # st.write(converted_df.head(2))
+    col, w, h = st.columns(3)
+    with col:
+        selected_col = st.selectbox("시각화할 열 하나를 선택해주세요. ", converted_df.columns)
+
+    with w:
+        width = st.number_input("그래프 그림의 가로 길이", value = 12)
+    with h:
+        height = st.number_input("그래프 그림의 세로 길이", value = 4)
     converted_df_1 = converted_df[selected_col]
     st.session_state['converted_df'] = converted_df
-    # st.write(converted_df.head(2))
-    st.warning("각 변수마다 일변량 데이터를 시각화하고 있어요. 오래 걸릴 수 있으니 기다려주세요!")
-    w, h = st.columns(2)
-    with w:
-        width = st.number_input("가로 길이", value = 12)
-    with h:
-        height = st.number_input("세로 길이", value = 4)
     eda.하나씩_그래프_그리기(pd.DataFrame(converted_df_1), width, height)
     st.session_state['viz'] = True
 

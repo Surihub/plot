@@ -152,49 +152,53 @@ def 모든_그래프_그리기(df):
     n = len(df.columns)
     # 범주의 수에 따라 팔레트 선택
     # 전체 그래프 개수 계산
-    progress_text = "📈 그래프를 그리는 중입니다...."
-    count = 0
-    # placeholder = st.empty()
-    # st.empty()
-    # bar = st.progress(count , text=progress_text)
-    fig, axes = plt.subplots(n, n, figsize=(4 * n, 4 * n))
-    for i, col1 in enumerate(df.columns):
-        # toast = st.toast(f"{col1}의 그래프를 그리는 중!", icon = '🍞')
-        for j, col2 in enumerate(df.columns):
-            # toast.toast(f"{col1}과 {col2}의 그래프", icon = '🥞')
-            ax = axes[i, j]
-            if i != j:
-                if user_column_types[col1] == 'Numeric' and user_column_types[col2] == 'Numeric':
-                    sns.scatterplot(data=df, x=col1, y=col2, ax=ax, color = pal[0])
-                elif user_column_types[col1] == 'Categorical' and user_column_types[col2] == 'Numeric':
-                    sns.boxplot(data=df, x=col1, y=col2, ax=ax, palette=pal)
-                elif user_column_types[col1] == 'Numeric' and user_column_types[col2] == 'Categorical':
-                    # sns.histplot(data=df, x=col1, hue=col2, ax=ax, palette=pal)  # 여기를 수정
-                    sns.kdeplot(data=df, x=col1, hue=col2, ax=ax, palette=pal)  # 여기를 수정
-                elif user_column_types[col1] == 'Categorical' and user_column_types[col2] == 'Categorical':
-                    unique_values = df[col2].unique().astype(str)
-                    # st.write(unique_values)
-                    # 색상 매핑 생성
-                    color_mapping = {val: color for val, color in zip(unique_values, palet(len(unique_values)))}
-                    mosaic(df, [col1, col2], ax=ax, properties=lambda key: {'color': color_mapping[key[1]]}, gap=0.05)
+    if n > 1:
+        st.warning("각 변수마다 일변량, 이변량 데이터를 시각화하고 있어요. 오래 걸릴 수 있으니 기다려주세요!")
+        progress_text = "📈 그래프를 그리는 중입니다...."
+        count = 0
+        # bar = st.progress(count , text=progress_text)
+        fig, axes = plt.subplots(n, n, figsize=(4 * n, 4 * n))
+        for i, col1 in enumerate(df.columns):
+            # toast = st.toast(f"{col1}의 그래프를 그리는 중!", icon = '🍞')
+            for j, col2 in enumerate(df.columns):
+                # toast.toast(f"{col1}과 {col2}의 그래프", icon = '🥞')
+                ax = axes[i, j]
+                if i != j:
+                    if user_column_types[col1] == 'Numeric' and user_column_types[col2] == 'Numeric':
+                        sns.scatterplot(data=df, x=col1, y=col2, ax=ax, color = pal[0])
+                    elif user_column_types[col1] == 'Categorical' and user_column_types[col2] == 'Numeric':
+                        sns.boxplot(data=df, x=col1, y=col2, ax=ax, palette=pal)
+                    elif user_column_types[col1] == 'Numeric' and user_column_types[col2] == 'Categorical':
+                        # sns.histplot(data=df, x=col1, hue=col2, ax=ax, palette=pal)  # 여기를 수정
+                        sns.kdeplot(data=df, x=col1, hue=col2, ax=ax, palette=pal)  # 여기를 수정
+                    elif user_column_types[col1] == 'Categorical' and user_column_types[col2] == 'Categorical':
+                        unique_values = df[col2].unique().astype(str)
+                        # st.write(unique_values)
+                        # 색상 매핑 생성
+                        color_mapping = {val: color for val, color in zip(unique_values, palet(len(unique_values)))}
+                        mosaic(df, [col1, col2], ax=ax, properties=lambda key: {'color': color_mapping[key[1]]}, gap=0.05)
 
-                ax.set_title(f'{col1} vs {col2}')
-            else:
-                if user_column_types[col1] == 'Numeric':
-                    sns.histplot(df[col1], ax=ax, color=pal[0])
+                    ax.set_title(f'{col1} vs {col2}')
                 else:
-                    sns.countplot(x=df[col1], ax=ax, palette=pal)
-                ax.set_title(f'Distribution of {col1}')
-            count = count + 1
-            # bar.progress(count /(n*n), text=progress_text)
-            # st.text(f'그려진 그래프: {completed_plots} / 총 그래프: {total_plots}')  # 진행 상황 업데이트
-            time.sleep(0.1)
-            # placeholder.empty()
-    # st.toast("거의 다 그렸어요!", icon = "🍽")
+                    if user_column_types[col1] == 'Numeric':
+                        sns.histplot(df[col1], ax=ax, color=pal[0])
+                    else:
+                        sns.countplot(x=df[col1], ax=ax, palette=pal)
+                    ax.set_title(f'Distribution of {col1}')
+                count = count + 1
+                # bar.progress(count /(n*n), text=progress_text)
+                # st.text(f'그려진 그래프: {completed_plots} / 총 그래프: {total_plots}')  # 진행 상황 업데이트
+                time.sleep(0.1)
+                # placeholder.empty()
+        # st.toast("거의 다 그렸어요!", icon = "🍽")
 
-    plt.tight_layout()
-    # bar.empty()
-    st.pyplot(fig)
+        plt.tight_layout()
+        # bar.empty()
+        st.pyplot(fig)
+    if n==1:
+        st.warning("열을 하나만 선택하셨군요! 아래의 데이터 하나씩 시각화 영역에서 시각화하세요!")
+
+
 
 from stemgraphic import stem_graphic
 
