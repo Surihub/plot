@@ -66,7 +66,7 @@ except:
 if st.session_state['data_loaded']:
     df = st.session_state['df']
     st.subheader("👈 분석할 열 선택하기")
-    st.success("위의 데이터셋에서, 분석할 변수만 선택해주세요.")
+    st.success(f"이 데이터는 {df.shape[0]}개의 행(가로줄), {df.shape[1]}개의 열(세로줄)로 이뤄진 데이터네요! 그럼, 위의 데이터셋에서, 분석할 열만 선택해주세요.")
     if st.checkbox('모든 열 선택하기', key='select_all', value = df.columns.all()):
         default_columns = df.columns.tolist() if 'select_all' in st.session_state and st.session_state['select_all'] else []
     else:
@@ -82,8 +82,8 @@ if st.session_state['data_loaded']:
 
 # 3. 데이터 유형 변경
 if st.session_state['columns_selected']:
-    st.subheader("🙄 데이터 유형 변경")
-    st.success("데이터를 살펴보고, 각 변수가 수치형인지, 범주형인지 확인해보세요.")
+    st.subheader("🙄 데이터 유형 변경",help="범주형 데이터는 성별이나 MBTI, 학년과 같이 범주의 형태인 데이터를, 수치형 데이터는 키, 온도와 같이 측정되거나 계산된 수치를 갖는 데이터를 수치형 데이터라고 합니다. ")
+    st.success("중요한 단계입니다! 데이터를 살펴보고, 각 변수가 수치형인지 범주형인지 확인해보세요. 유형을 잘못 선택할 경우, 그래프가 그려지지 않아요!")
     if st.session_state['selected_columns'] is not None:
         df_selected = st.session_state['df'][st.session_state['selected_columns']]
         inferred_types = eda.infer_column_types(df_selected)
@@ -135,8 +135,8 @@ if st.session_state['columns_selected']:
 # 4. 데이터 시각화
 if st.session_state['types_set']:
     st.subheader("📊 데이터 한꺼번에 요약과 시각화")
-    st.success("위에서 설정한 데이터의 열의 개수가 4개라면, 4*4 = 16개의 그래프가 그려집니다. 대각선에는 일변량 자료의 데이터 분포가, 나머지 칸에는 두 변량의 관계에 대한 그래프가 그려집니다. 전체 시각화를 보며, 의미있는 패턴을 빠르게 찾아보세요. ")
     converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
+    st.success(f"위에서 설정한 데이터의 열의 개수가 {len(converted_df.columns)}개네요! 그러면, {len(converted_df.columns)}*{len(converted_df.columns)} = {len(converted_df.columns)**2}개의 그래프가 그려집니다. 대각선에는 일변량 자료의 데이터 분포가, 나머지 칸에는 두 변량의 관계에 대한 그래프가 그려집니다. 전체 시각화를 보며, 의미있는 패턴을 빠르게 찾아보세요. ")
     st.session_state['converted_df'] = converted_df
     # st.write(converted_df.head(2))
     try:
