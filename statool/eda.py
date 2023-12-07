@@ -2,6 +2,7 @@
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
+import koreanize_matplotlib
 from statsmodels.graphics.mosaicplot import mosaic
 import datetime
 import streamlit as st
@@ -15,7 +16,7 @@ import numpy as np
 def load_data(dataset_name, uploaded_file):
     if uploaded_file:
         if uploaded_file.name.endswith('.csv'):
-            df = pd.read_csv(uploaded_file, encoding = 'euc-kr')
+            df = pd.read_csv(uploaded_file, encoding = 'utf-8')
         else:
             st.warning("csv 파일만 업로드 가능합니다. ")
         return df
@@ -194,6 +195,135 @@ def 모든_그래프_그리기(df):
     plt.tight_layout()
     # bar.empty()
     st.pyplot(fig)
+
+from stemgraphic import stem_graphic
+
+@st.cache_data
+def 하나씩_그래프_그리기(df, width, height):
+    user_column_types = infer_column_types(df)
+    # 범주의 수에 따라 팔레트 선택
+    # 전체 그래프 개수 계산s
+    progress_text = "📈 그래프를 그리는 중입니다...."
+    col = df.columns[0]
+    # 범주형일 때, 막대, 원, 띠
+    if user_column_types[col] == "Categorical":
+        fig, axes = plt.subplots(1, 3, figsize=(width, height))
+
+        # 막대 그래프
+        sns.countplot(x=df[col], ax=axes[0], palette=pal)
+        axes[0].set_title(f'{col} bar chart')
+
+        # 원 그래프
+        axes[1].pie(df[col].value_counts(), labels=df[col].value_counts().index, autopct='%1.1f%%', startangle=90,  colors=pal)
+        axes[1].set_title(f'{col} pie chart')
+
+        # 띠 그래프
+        # 데이터프레임에서 특정 열에 대한 값의 비율을 계산합니다.
+        ddi = df.copy()
+        ddi = ddi.dropna()
+        ddi = pd.DataFrame(ddi[col])
+        ddi['temp'] = '_'
+        
+        ddi_2 = pd.pivot_table(ddi, columns = col, aggfunc= 'count')
+        # ddi_2.plot.bar(stacked = True, ax = axes[2])
+
+        # 각 값이 전체 합계에 대한 비율이 되도록 변환합니다.
+        ddi_percent = ddi_2.divide(ddi_2.sum(axis=1), axis=0)
+
+        # 막대 그래프를 가로로 그리고, 누적해서 표시합니다.
+        ddi_percent.plot(kind='barh', stacked=True, ax=axes[2], legend=False, color = pal)
+
+        # 범례 설정
+        handles, labels = axes[2].get_legend_handles_labels()
+        axes[2].legend(handles, [label.split(', ')[-1][:-1] for label in labels], loc='lower center', bbox_to_anchor=(0.5, 0), ncol=len(labels), frameon=False)
+
+        # x축 레이블을 퍼센트로 표시
+        axes[2].set_xlabel('(%)')
+
+        # y축의 눈금과 레이블 제거
+        axes[2].yaxis.set_ticks([])
+        axes[2].yaxis.set_ticklabels([])
+
+        # 그래프 제목 설정
+        axes[2].set_title(f'{col} ribbon graph')
+
+        plt.tight_layout()
+        st.pyplot(fig)
+
+    # 수치형일 때, 줄기잎, 히스토, 도다, 상자그림
+    else:
+
+        fig, axes = plt.subplots(2, 2, figsize=(width, height*2))            
+        
+        # 줄기잎그림
+
+        # 히스토그램
+        # 도다
+        # 상자그림
+        stem_graphic(df[col], ax = axes[0,0])
+        sns.histplot(data = df, x = col, ax = axes[0,1], color=pal[0])
+        # sns.boxplot(data = df, x = col, ax = axes[1,0], palette=pal)
+        sns.boxplot(data = df, x = col, ax = axes[1,1], palette = pal)
+
+
+        # 데이터를 히스토그램으로 나누어 계급 구하기
+        df_copy = df.dropna()
+        counts, bin_edges = np.histogram(df_copy[col], bins=10)
+
+        # 도수분포다각형을 그리기 위한 x값(계급의 중앙값) 계산
+        # 양 끝의 계급에 대한 도수를 0으로 추가
+        counts = np.insert(counts, 0, 0)
+        counts = np.append(counts, 0)
+        bin_edges = np.insert(bin_edges, 0, bin_edges[0] - (bin_edges[1] - bin_edges[0]))
+        bin_edges = np.append(bin_edges, bin_edges[-1] + (bin_edges[-1] - bin_edges[-2]))
+
+        bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+
+        # 도수분포다각형 그리기
+        axes[1,0].plot(bin_centers, counts, marker='o', linestyle='-')
+
+        plt.tight_layout()
+        st.pyplot(fig)
+
+    # fig, axes = plt.subplots(n, n, figsize=(4 * n, 4 * n))
+    # for i, col1 in enumerate(df.columns):
+    #     # toast = st.toast(f"{col1}의 그래프를 그리는 중!", icon = '🍞')
+    #     for j, col2 in enumerate(df.columns):
+    #         # toast.toast(f"{col1}과 {col2}의 그래프", icon = '🥞')
+    #         ax = axes[i, j]
+    #         if i != j:
+    #             if user_column_types[col1] == 'Numeric' and user_column_types[col2] == 'Numeric':
+    #                 sns.scatterplot(data=df, x=col1, y=col2, ax=ax, color = pal[0])
+    #             elif user_column_types[col1] == 'Categorical' and user_column_types[col2] == 'Numeric':
+    #                 sns.boxplot(data=df, x=col1, y=col2, ax=ax, palette=pal)
+    #             elif user_column_types[col1] == 'Numeric' and user_column_types[col2] == 'Categorical':
+    #                 # sns.histplot(data=df, x=col1, hue=col2, ax=ax, palette=pal)  # 여기를 수정
+    #                 sns.kdeplot(data=df, x=col1, hue=col2, ax=ax, palette=pal)  # 여기를 수정
+    #             elif user_column_types[col1] == 'Categorical' and user_column_types[col2] == 'Categorical':
+    #                 unique_values = df[col2].unique().astype(str)
+    #                 # st.write(unique_values)
+    #                 # 색상 매핑 생성
+    #                 color_mapping = {val: color for val, color in zip(unique_values, palet(len(unique_values)))}
+    #                 mosaic(df, [col1, col2], ax=ax, properties=lambda key: {'color': color_mapping[key[1]]}, gap=0.05)
+
+    #             ax.set_title(f'{col1} vs {col2}')
+    #         else:
+    #             if user_column_types[col1] == 'Numeric':
+    #                 sns.histplot(df[col1], ax=ax, color=pal[0])
+    #             else:
+    #                 sns.countplot(x=df[col1], ax=ax, palette=pal)
+    #             ax.set_title(f'Distribution of {col1}')
+    #         count = count + 1
+    #         # bar.progress(count /(n*n), text=progress_text)
+    #         # st.text(f'그려진 그래프: {completed_plots} / 총 그래프: {total_plots}')  # 진행 상황 업데이트
+    #         time.sleep(0.1)
+    #         # placeholder.empty()
+    # # st.toast("거의 다 그렸어요!", icon = "🍽")
+
+    # plt.tight_layout()
+    # # bar.empty()
+    # st.pyplot(fig)
+
 
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score

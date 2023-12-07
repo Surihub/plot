@@ -4,3 +4,5 @@ statsmodels
 koreanize-matplotlib
 openai
 scikit-learn
+stemgraphic
+bokeh==2.4.3

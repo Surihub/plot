@@ -4,9 +4,11 @@ import seaborn as sns
 import statool.eda as eda  # eda 모듈 임포트
 import datetime
 import numpy as np
+import matplotlib.pyplot as plt
+import koreanize_matplotlib
 
 st.header("🌲Wep app for EDA")
-st.success("🎈EDA(Exploratory Data Analysis, 탐색적 데이터 분석)이란 간단한 그래프로 데이터의 특징과 패턴을 찾아내어 데이터를 탐구하기 위한 과정입니다. 왼쪽의 사이드바에서 데이터를 선택하거나 업로드하고, 순서에 따라 탐색을 진행해보세요. \n\n✉버그 및 제안사항 등 문의: sbhath17@gmail.com")
+st.success("🎈EDA(Exploratory Data Analysis, 탐색적 데이터 분석)이란 간단한 그래프로 데이터의 특징과 패턴을 찾아내어 데이터를 탐구하기 위한 과정입니다. 왼쪽의 사이드바에서 데이터를 선택하거나 업로드하고, 순서에 따라 탐색을 진행해보세요. **단, 입력하는 데이터는 원자료(raw data)의 형태**여야 합니다. \n\n✉ 버그 및 제안사항 등 문의: sbhath17@gmail.com(황수빈), code: [github](https://github.com/Surihub/plot)")
 
 # 스트림릿 세션 상태 초기화
 if 'df' not in st.session_state:
@@ -132,7 +134,8 @@ if st.session_state['columns_selected']:
 
 # 4. 데이터 시각화
 if st.session_state['types_set']:
-    st.subheader("📊 데이터 요약과 시각화")
+    st.subheader("📊 데이터 한꺼번에 요약과 시각화")
+    st.success("위에서 설정한 데이터의 열의 개수가 4개라면, 4*4 = 16개의 그래프가 그려집니다. 대각선에는 일변량 자료의 데이터 분포가, 나머지 칸에는 두 변량의 관계에 대한 그래프가 그려집니다. 전체 시각화를 보며, 의미있는 패턴을 빠르게 찾아보세요. ")
     converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
     st.session_state['converted_df'] = converted_df
     # st.write(converted_df.head(2))
@@ -146,9 +149,33 @@ if st.session_state['types_set']:
         for column, col_type in user_column_types.items():
             st.write(f"**{column}** ({col_type})")
             if col_type == 'Numeric':
-                st.write(pd.DataFrame(converted_df[column].describe()).T)
+                numeric_descriptive = pd.DataFrame(converted_df[column].describe()).T
+                numeric_descriptive.columns = ['총 개수', '평균', '표준편차', '최솟값', '제1사분위수', '중앙값', '제3사분위수', '최댓값']
+                st.write(numeric_descriptive)
             elif col_type == 'Categorical':
-                st.write(pd.DataFrame(converted_df[column].value_counts()).T.style.background_gradient(axis=1))
+                categoric_descriptive = pd.DataFrame(converted_df[column].value_counts()).T
+                categoric_descriptive.index = ["개수"]
+                st.write(categoric_descriptive.style.background_gradient(axis=1))
+
+from stemgraphic import stem_graphic
+# 4. 데이터 시각화
+if st.session_state['types_set']:
+    st.subheader("📊 데이터 하나씩 시각화")
+    st.success("위에서 나타낸 패턴을 바탕으로, 한 열만을 골라 다양하게 시각화해보면서 추가적으로 탐색해봅시다. ")
+    converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
+    selected_col = st.selectbox("자세하게 시각화할 열 하나를 선택해주세요. ", converted_df.columns)
+    converted_df_1 = converted_df[selected_col]
+    st.session_state['converted_df'] = converted_df
+    # st.write(converted_df.head(2))
+    st.warning("각 변수마다 일변량 데이터를 시각화하고 있어요. 오래 걸릴 수 있으니 기다려주세요!")
+    w, h = st.columns(2)
+    with w:
+        width = st.number_input("가로 길이", value = 12)
+    with h:
+        height = st.number_input("세로 길이", value = 4)
+    eda.하나씩_그래프_그리기(pd.DataFrame(converted_df_1), width, height)
+    st.session_state['viz'] = True
+
 
 
 # 5. 재표현하기
@@ -169,10 +196,8 @@ if st.session_state['viz']:
     if st.button('재표현 후 시각화하기'):
         eda.모든_그래프_그리기(df_transformed)
 
-import matplotlib.pyplot as plt
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error, r2_score
-# import koreanize_matplotlib
 
 if st.session_state['viz']:
     st.subheader("🔍 회귀선과 잔차 살펴보기")
