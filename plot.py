@@ -139,43 +139,49 @@ if st.session_state['types_set']:
     converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
     st.session_state['converted_df'] = converted_df
     # st.write(converted_df.head(2))
-    tab1, tab2  = st.tabs(['데이터 시각화','기술통계량 확인하기'])
-    with tab1:
-        eda.모든_그래프_그리기(converted_df)
-        st.session_state['viz'] = True
-    with tab2:
-        # 각 열에 대한 기술통계량 또는 빈도표 생성
-        for column, col_type in user_column_types.items():
-            st.write(f"**{column}** ({col_type})")
-            if col_type == 'Numeric':
-                numeric_descriptive = pd.DataFrame(converted_df[column].describe()).T
-                numeric_descriptive.columns = ['총 개수', '평균', '표준편차', '최솟값', '제1사분위수', '중앙값', '제3사분위수', '최댓값']
-                st.write(numeric_descriptive)
-            elif col_type == 'Categorical':
-                categoric_descriptive = pd.DataFrame(converted_df[column].value_counts()).T
-                categoric_descriptive.index = ["개수"]
-                st.write(categoric_descriptive.style.background_gradient(axis=1))
+    try:
+        tab1, tab2  = st.tabs(['데이터 시각화','기술통계량 확인하기'])
+        with tab1:
+            eda.모든_그래프_그리기(converted_df)
+            st.session_state['viz'] = True
+        with tab2:
+            # 각 열에 대한 기술통계량 또는 빈도표 생성
+            for column, col_type in user_column_types.items():
+                st.write(f"**{column}** ({col_type})")
+                if col_type == 'Numeric':
+                    numeric_descriptive = pd.DataFrame(converted_df[column].describe()).T
+                    numeric_descriptive.columns = ['총 개수', '평균', '표준편차', '최솟값', '제1사분위수', '중앙값', '제3사분위수', '최댓값']
+                    st.write(numeric_descriptive)
+                elif col_type == 'Categorical':
+                    categoric_descriptive = pd.DataFrame(converted_df[column].value_counts()).T
+                    categoric_descriptive.index = ["개수"]
+                    st.write(categoric_descriptive.style.background_gradient(axis=1))
+    except:
+        st.error("데이터의 종류를 다시 한 번 확인해주세요! 종류가 잘못되어 그래프를 그릴 수 없어요😅. 예를 들어 A,B,B,B,A,....인 데이터를 수치형으로 입력하신 경우, 오류가 납니다. ")
 
 from stemgraphic import stem_graphic
 # 4. 데이터 시각화
 if st.session_state['types_set']:
     st.subheader("📈 데이터 하나씩 시각화")
     st.success("위에서 나타낸 패턴을 바탕으로, 한 열만을 골라 다양하게 시각화해보면서 추가적으로 탐색해봅시다. ")
-    converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
+    try:
+        converted_df = eda.convert_column_types(df_selected, st.session_state['user_column_types'])
 
-    # st.write(converted_df.head(2))
-    col, w, h = st.columns(3)
-    with col:
-        selected_col = st.selectbox("시각화할 열 하나를 선택해주세요. ", converted_df.columns)
+        # st.write(converted_df.head(2))
+        col, w, h = st.columns(3)
+        with col:
+            selected_col = st.selectbox("시각화할 열 하나를 선택해주세요. ", converted_df.columns)
 
-    with w:
-        width = st.number_input("그래프 그림의 가로 길이", value = 12)
-    with h:
-        height = st.number_input("그래프 그림의 세로 길이", value = 4)
-    converted_df_1 = converted_df[selected_col]
-    st.session_state['converted_df'] = converted_df
-    eda.하나씩_그래프_그리기(pd.DataFrame(converted_df_1), width, height)
-    st.session_state['viz'] = True
+        with w:
+            width = st.number_input("그래프 그림의 가로 길이", value = 12)
+        with h:
+            height = st.number_input("그래프 그림의 세로 길이", value = 4)
+        converted_df_1 = converted_df[selected_col]
+        st.session_state['converted_df'] = converted_df
+        eda.하나씩_그래프_그리기(pd.DataFrame(converted_df_1), width, height)
+        st.session_state['viz'] = True
+    except:
+        st.error("데이터의 종류를 다시 한 번 확인해주세요! 종류가 잘못되어 그래프를 그릴 수 없어요😅. 예를 들어 A,B,B,B,A,....인 데이터를 수치형으로 입력하신 경우, 오류가 납니다. ")
 
 
 
